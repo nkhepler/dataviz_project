@@ -3,6 +3,8 @@ title: "Data Visualization Project"
 author: "Nate Hepler"
 date: "6/19/2018"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -35,7 +37,7 @@ The data we'll be using for this part of the project were downloaded from [kaggl
 First, we'll read the data in from our `data/raw_data` directory.
 
 ```{r pet-data, warning=FALSE} 
-pets <- read.csv("data/raw_data/seattle_pet_licenses.csv", stringsAsFactors = FALSE)
+pets <- read.csv("dataviz_project/data/raw_data/seattle_pet_licenses.csv", stringsAsFactors = FALSE)
 ```
 
 ## Explore the Data
@@ -50,15 +52,21 @@ pets <- read.csv("data/raw_data/seattle_pet_licenses.csv", stringsAsFactors = FA
 ```{r pet-barchart, warning=FALSE} 
 ## visual breakdown of how many of each species 
 ## are included in the dataset
-ggplot(DATASET) +
-  geom_bar(aes(x=VARIABLE))
+ggplot(pets) +
+  geom_bar(aes(x=species, fill=species)) + 
+  ylab('Number of animals') + 
+  xlab('Species') + 
+  labs(title = 'Number of animals by species', 
+       subtitle='Three different species: Cat, Dog and Livestock') +
+  theme(axis.text = element_text(color='black'),
+        legend.position = 'none')
 ```
 
 ```{r pet-cat-table, warning=FALSE} 
 ## Table: Most frequent Cat Name 
-DATASET %>% 
-  filter(species == "SPECIES", VARIABLE != "") %>%
-  group_by(VARIABLE) %>% 
+pets %>% 
+  filter(species == "Cat", animal_s_name != "") %>%
+  group_by(animal_s_name) %>% 
   summarise(n = n()) %>% 
   arrange(-n) %>%
   top_n(n = 10) %>%
@@ -67,7 +75,13 @@ DATASET %>%
 
 ```{r pet-dog-table, warning=FALSE} 
 ## Table: Most frequent Dog Name
-## ADD CODE!
+pets %>%
+  filter(species == 'Dog', animal_s_name != '') %>%
+  group_by(animal_s_name) %>%
+  summarise(n=n()) %>%
+  arrange(-n) %>%
+  top_n(n=10) %>%
+  knitr::kable(., caption = 'Top 10 Dog Names in Seattle')
 ```
 
 ```{r pet-linechart, warning=FALSE} 
@@ -78,12 +92,12 @@ pets$ym <- as.yearmon(pets$date, "%y%m")
 ## how the number of licenses recorded has changed over time
 pets %>%
   ## group by yearmonth (`ym`)
-  function_name(VARIABLE) %>% 
+  group_by(ym) %>% 
   ## count number within each group
-  function_name(n=n()) %>%
-  ggplot(., aes(VARIABLE, n)) + 
+  summarise(n=n()) %>%
+  ggplot(., aes(x=ym, y=n)) + 
   ## geom name for line chart
-  geom_GEOM() +
+  geom_line() +
   scale_x_yearmon() + 
   xlab("") + 
   ylab("Number of licenses")
@@ -91,7 +105,17 @@ pets %>%
 
 ```{r pet-plot, warning=FALSE} 
 ### Explore the data -- create your own plot!
-
+pets %>%
+  ## group by yearmonth (`ym`)
+  group_by(ym, species) %>% 
+  ## count number within each group
+  summarise(n=n()) %>%
+  ggplot(., aes(x=ym, y=n, color=species)) +
+  geom_line() + 
+  scale_x_yearmon() + 
+  xlab('') +
+  ylab('Number of licenses')
+  
 ```
 
 # Part 2: Explanatory Data Analysis
