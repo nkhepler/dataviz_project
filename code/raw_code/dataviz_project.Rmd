@@ -40,15 +40,14 @@ First, we'll read the data in from our `data/raw_data` directory.
 pets <- read.csv("dataviz_project/data/raw_data/seattle_pet_licenses.csv", stringsAsFactors = FALSE)
 ```
 
-## Explore the Data
-
 ```{r pet-explore, warning=FALSE} 
 ## Include code here to explore the data 
 ## and answer the questions in the exercise
 ```
 
 ## Visualize the Data
-
+### Breaking down by animal
+Deteriming how many animals of each three species have a license
 ```{r pet-barchart, warning=FALSE} 
 ## visual breakdown of how many of each species 
 ## are included in the dataset
@@ -62,6 +61,7 @@ ggplot(pets) +
         legend.position = 'none')
 ```
 
+### Top 10 Cat Names
 ```{r pet-cat-table, warning=FALSE} 
 ## Table: Most frequent Cat Name 
 pets %>% 
@@ -73,6 +73,7 @@ pets %>%
   knitr::kable(., caption = "Top 10 Cat Names in Seattle")
 ```
 
+### Top 10 Dog Names
 ```{r pet-dog-table, warning=FALSE} 
 ## Table: Most frequent Dog Name
 pets %>%
@@ -84,6 +85,7 @@ pets %>%
   knitr::kable(., caption = 'Top 10 Dog Names in Seattle')
 ```
 
+### Calculating and graphing licenses issued over time
 ```{r pet-linechart, warning=FALSE} 
 ## add date and ym columns
 pets$date <- lubridate::ymd_hms(pets$license_issue_date)
@@ -103,6 +105,7 @@ pets %>%
   ylab("Number of licenses")
 ```
 
+### Graphing number of licenses by species
 ```{r pet-plot, warning=FALSE} 
 ### Explore the data -- create your own plot!
 pets %>%
@@ -126,7 +129,7 @@ The data used in this part of the project were dowloaded from [FiveThirtyEight](
 
 ```{r meat-data, warning=FALSE} 
 ## read in the data
-steak <- read.csv("data/raw_data/steak-risk-survey.csv", stringsAsFactors = FALSE) %>%
+steak <- read.csv("dataviz_project/data/raw_data/steak-risk-survey.csv", stringsAsFactors = FALSE) %>%
   ## remove first row which just includes the word "Response" in each column
   slice(2:n())
 ```
@@ -134,11 +137,28 @@ steak <- read.csv("data/raw_data/steak-risk-survey.csv", stringsAsFactors = FALS
 ## Explore the Data
 
 ```{r meat-explore, warning=FALSE} 
-## Include code here to explore the data 
+## Include code here to explore the data
+steak_explore <- steak %>%
+  group_by(Consider.the.following.hypothetical.situations...br.In.Lottery.A..you.have.a.50..chance.of.success..with.a.payout.of..100...br.In.Lottery.B..you.have.a.90..chance.of.success..with.a.payout.of..20...br..br.Assuming.you.have..10.to.bet..would.you.play.Lottery.A.or.Lottery.B.) %>%
+  summarise(n=n())
+
+steak_yes <- steak %>% 
+  group_by(Do.you.eat.steak.) %>%
+  summarise(n=n())
+
+steak_prep <- unique(steak$How.do.you.like.your.steak.prepared.)
+steak_prep2 <- steak %>%
+  group_by(How.do.you.like.your.steak.prepared.) %>%
+  summarise(n=n())
+
+  
 ## and answer the questions in the exercise
+
 ```
 
 ## Wrangle the Data
+
+Simplifying data to just include steak preferences.
 
 ```{r meat-wrangle, warning=FALSE} 
 ## wrangle the steak data set
@@ -157,11 +177,12 @@ pref <- steak %>%
 
 ## Visualize the Data
 
+Creating bar chart for steak preference
 ```{r meat-visualize, warning=FALSE}
 ## generate the plot 
 p <- ggplot(pref) +
   ## specify you want to generate a bar chart
-  function_name(aes(x = steak_pref, y = prop, fill = steak_pref),
+  geom_bar(aes(x = steak_pref, y = prop, fill = steak_pref),
                 stat = 'identity', 
                 width = 0.7) + 
   ## this adds text labels (you don't have to change anything here)
@@ -173,32 +194,32 @@ p <- ggplot(pref) +
             size = 5,
             color = "grey40") +
   ## flip coordinates to make horizontal box plot
-  function_name() +
+  coord_flip() +
   ## change the colors of the bars
-  function_name(values = c("#370B01", 
+  scale_fill_manual(values = c("#370B01", 
                            "#70402C",
                            "#955732", 
                            "#B36153",
                            "#B5413F")) +
   ## change the scale/labels of the steak-wellness variable (x-axis)
-  function_name(limits = levels(fct_rev(pref$steak_pref)),
+  scale_x_discrete(limits = levels(fct_rev(pref$steak_pref)),
                 labels = c("Well", 
                            "Medium Well" = "Medium-well",
                            "Medium",
                            "Medium rare"="Medium-rare",
                            "Rare")) +
   ## change the scale/lables of the percent axis (y-axis)
-  function_name(labels = scales::percent, 
+  scale_y_continuous(labels = scales::percent, 
                 expand = c(mult = c(0,0), 
                            add = c(0,0.035))) +
   ## change the title, subtitle, and caption
-  function_name(title="'How Do You Like Your Steak Prepared?'", 
+  labs(title="'How Do You Like Your Steak Prepared?'", 
                 subtitle="From a survey of 432 steak-eating Americans",
                 caption="FiveThirtyEight: Surveymonkey") +
   ## change the theme (use ggthemes)
-  function_name() +
+  ggthemes::theme_fivethirtyeight() +
   ## fine tune the theme
-  function_name(axis.text = element_text(size = 14), 
+  theme(axis.text = element_text(size = 14), 
                 title = element_text(size = 16), 
                 legend.position="none", 
                 plot.caption=element_text(size = 12), 
@@ -214,13 +235,52 @@ p
 
 ```{r save-plot, warning=FALSE}
 ## save plot to figures/explanatory_figures directory
-ggsave(plot = OBJECT_NAME, filename = FILENAME, width = 8, height = 4)
+ggsave(plot = p, filename = 'dataviz_project/figures/explanatory_figures/steak_R.png', width = 8, height = 4)
 ```
 
 ## Visualize the Data
 
+Wrangling data by smoker v non-smoker and then graphing.
 ```{r meat-plot, warning=FALSE} 
 ### Explore the data -- create your own plot!
+smoke <- steak %>%
+  mutate(smoke_choice = factor(Do.you.ever.smoke.cigarettes., 
+                               levels = c('Yes', 'No'))) %>%
+  filter(smoke_choice != '') %>%
+  group_by(smoke_choice) %>%
+  summarise(n=n()) %>%
+  mutate(prop = n / sum(n))
+
+p_smoke <- ggplot(smoke) +
+  geom_bar(mapping = aes(x=smoke_choice, y=prop, fill = smoke_choice), 
+           stat='identity', 
+           width = 0.5) + 
+  geom_text(mapping = aes(label = paste0(as.integer(prop*100), '%'), 
+            x=smoke_choice, 
+            y=prop),
+            hjust = -0.1,
+            size = 4) + 
+  ggthemes::theme_fivethirtyeight() + 
+  scale_fill_manual(values = c('navajowhite3', 'orange4')) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::percent, 
+                expand = c(mult = c(0,0), 
+                           add = c(0,0.035))) + 
+  labs(title = "'Do you ever smoke cigarettes'",
+       subtitle = 'From a survey of 537 Americans',
+       caption = 'FiveThirtyEight: Surveymonkey') + 
+  theme(
+    plot.title = element_text(size = 20),
+    plot.subtitle = element_text(size = 16),
+    plot.caption = element_text(size = 12),
+    legend.position = 'none',
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(size=15)
+  )
+  
+p_smoke
 
 ```
 
@@ -228,5 +288,5 @@ ggsave(plot = OBJECT_NAME, filename = FILENAME, width = 8, height = 4)
 
 ```{r save-meat-plot, warning=FALSE}
 ## save plot to figures/explanatory_figures directory
-ggsave(plot = OBJECT_NAME, filename = DIFFERENT_FILENAME)
+ggsave(plot = p_smoke, filename = 'dataviz_project/figures/explanatory_figures/smoke_R.png', width=10, height=4)
 ```
